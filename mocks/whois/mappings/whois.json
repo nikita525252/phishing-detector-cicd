@@ -1,0 +1,11 @@
+{
+  "request": { "method": "POST", "url": "/whois" },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "domain": "x",
+      "ageDays": 2,
+      "isSuspicious": true
+    }
+  }
+}

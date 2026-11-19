@@ -1,0 +1,16 @@
+services:
+  app:
+    build: .
+    ports: ["8080:8080"]
+    environment:
+      - WHOIS_URL=http://whois-mock:8080
+      - SMTP_URL=http://smtp-mock:8080
+    depends_on: [whois-mock, smtp-mock]
+  whois-mock:
+    image: wiremock/wiremock:3.3.1
+    ports: ["8089:8080"]
+    volumes: ["./mocks/whois:/home/wiremock"]
+  smtp-mock:
+    image: wiremock/wiremock:3.3.1
+    ports: ["8090:8080"]
+    volumes: ["./mocks/smtp:/home/wiremock"]

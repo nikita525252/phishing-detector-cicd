@@ -1,0 +1,4 @@
+{
+  "request": { "method": "POST", "url": "/send" },
+  "response": { "status": 202, "jsonBody": { "status": "queued" } }
+}
