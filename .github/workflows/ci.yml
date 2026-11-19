@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline for 6 Services
 
 on:
   push:
@@ -11,12 +11,12 @@ env:
   IMAGE_NAME: ${{ github.repository }}/phishing-detector-app
 
 jobs:
-  build-test-push:
+  # 1. СБОРКА И ТЕСТЫ ДЛЯ КАЖДОГО СЕРВИСА (МАТРИЦА)
+  test-services:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
+    strategy:
+      matrix:
+        service: [scan-service, visual-service, text-service, domain-service, notification-service, monitoring-service]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,9 +30,24 @@ jobs:
         run: |
           pip install fastapi uvicorn httpx pydantic cachetools PyJWT pytest pytest-asyncio
 
-      - name: Run tests
+      - name: "Testing service: ${{ matrix.service }}"
         run: |
+          echo "Запуск тестов для сервиса: ${{ matrix.service }}"
+          # В реальности здесь были бы тесты для конкретного сервиса, 
+          # но у нас они общие, поэтому просто прогоняем весь файл
           pytest app/test_all.py -q
+
+  # 2. СБОРКА ОБЩЕГО DOCKER-ОБРАЗА (CD)
+  build-and-push:
+    needs: test-services # Ждем, пока пройдут тесты всех сервисов
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Log in to GHCR
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
