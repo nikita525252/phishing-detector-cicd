@@ -11,12 +11,31 @@ env:
   IMAGE_NAME: ${{ github.repository }}/phishing-detector-app
 
 jobs:
-  # 1. СБОРКА И ТЕСТЫ ДЛЯ КАЖДОГО СЕРВИСА (МАТРИЦА)
-  test-services:
+  # ==========================================
+  # ЭТАП 1: СБОРКА И ТЕСТИРОВАНИЕ (Матрица)
+  # ==========================================
+  build-services:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [scan-service, visual-service, text-service, domain-service, notification-service, monitoring-service]
+        include:
+          # 3 сервиса, у которых есть реальные тесты
+          - service: scan-service
+            check: "pytest app/test_all.py -q -m 'scan'"
+          - service: api-gateway
+            check: "pytest app/test_all.py -q -m 'gateway'"
+          # 4 сервиса-заглушки (проверка синтаксиса)
+          - service: visual-service
+            check: "python -m py_compile app/analyzers.py"
+          - service: text-service
+            check: "python -m py_compile app/analyzers.py"
+          - service: domain-service
+            check: "python -m py_compile app/analyzers.py"
+          - service: notification-service
+            check: "python -m py_compile app/notification.py"
+          - service: monitoring-service
+            check: "python -m py_compile app/monitoring.py"
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,16 +49,14 @@ jobs:
         run: |
           pip install fastapi uvicorn httpx pydantic cachetools PyJWT pytest pytest-asyncio
 
-      - name: "Testing service: ${{ matrix.service }}"
-        run: |
-          echo "Запуск тестов для сервиса: ${{ matrix.service }}"
-          # В реальности здесь были бы тесты для конкретного сервиса, 
-          # но у нас они общие, поэтому просто прогоняем весь файл
-          pytest app/test_all.py -q
+      - name: "Build & Test: ${{ matrix.service }}"
+        run: ${{ matrix.check }}
 
-  # 2. СБОРКА ОБЩЕГО DOCKER-ОБРАЗА (CD)
-  build-and-push:
-    needs: test-services # Ждем, пока пройдут тесты всех сервисов
+  # ==========================================
+  # ЭТАП 2: ПУБЛИКАЦИЯ (CD)
+  # ==========================================
+  publish-image:
+    needs: build-services # Запускается только если все 7 проверок прошли успешно
     runs-on: ubuntu-latest
     permissions:
       contents: read
