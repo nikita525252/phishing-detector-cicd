@@ -5,14 +5,13 @@ from app.scan import aggregate
 import jwt
 import time
 
-# Генерируем настоящий валидный токен для тестов
 payload = {"sub": "user-123", "role": "analyst", "exp": int(time.time()) + 3600}
 VALID_TOKEN = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 H = {"Authorization": f"Bearer {VALID_TOKEN}", "Idempotency-Key": "k1"}
 BODY = {"url": "https://sberbank-login.ru", "htmlContent": "<form/>", "screenshotId": "s1"}
 
-# --- 3 ТЕСТА ДЛЯ SCAN-SERVICE ---
+#  3 ТЕСТА ДЛЯ SCAN-SERVICE 
 @pytest.mark.scan
 def test_verdict_happy():
     assert aggregate({"similarityScore": .95}, {"isPhishing": True, "confidence": .9},
@@ -44,11 +43,11 @@ async def test_scan_idempotent(monkeypatch):
         assert r1.status_code == 202 
         assert r1.json()["scanId"] == r2.json()["scanId"]
 
-# --- 1 ТЕСТ ДЛЯ API GATEWAY ---
+#  1 ТЕСТ ДЛЯ API GATEWAY 
 @pytest.mark.gateway
 @pytest.mark.asyncio
 async def test_missing_jwt_401():
-    # raise_app_exceptions=False позволяет прочитать ответ 401, а не упасть с ошибкой
     async with AsyncClient(transport=ASGITransport(app=app, raise_app_exceptions=False), base_url="http://t") as c:
         r = await c.post("/api/v1/scans", json=BODY)
         assert r.status_code == 401
+

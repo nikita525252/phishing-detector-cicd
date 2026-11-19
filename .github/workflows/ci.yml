@@ -11,20 +11,15 @@ env:
   IMAGE_NAME: ${{ github.repository }}/phishing-detector-app
 
 jobs:
-  # ==========================================
-  # ЭТАП 1: СБОРКА И ТЕСТИРОВАНИЕ (Матрица)
-  # ==========================================
   build-services:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
-          # 3 сервиса, у которых есть реальные тесты
           - service: scan-service
             check: "pytest app/test_all.py -q -m 'scan'"
           - service: api-gateway
             check: "pytest app/test_all.py -q -m 'gateway'"
-          # 4 сервиса-заглушки (проверка синтаксиса)
           - service: visual-service
             check: "python -m py_compile app/analyzers.py"
           - service: text-service
@@ -52,11 +47,9 @@ jobs:
       - name: "Build & Test: ${{ matrix.service }}"
         run: ${{ matrix.check }}
 
-  # ==========================================
-  # ЭТАП 2: ПУБЛИКАЦИЯ (CD)
-  # ==========================================
+  
   publish-image:
-    needs: build-services # Запускается только если все 7 проверок прошли успешно
+    needs: build-services # Запускается только если 7 цспешно
     runs-on: ubuntu-latest
     permissions:
       contents: read
