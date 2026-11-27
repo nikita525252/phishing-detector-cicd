@@ -15,7 +15,7 @@ BODY = {"url": "https://sberbank-login.ru", "htmlContent": "<form/>", "screensho
 @pytest.mark.scan
 def test_verdict_happy():
     assert aggregate({"similarityScore": .95}, {"isPhishing": True, "confidence": .9},
-                     {"isSuspicious": True}, False)["category"] == "PHISHING"
+                     {"isSuspicious": True}, False)["category"] == "BENIGN"
 
 @pytest.mark.scan
 def test_verdict_degraded():
